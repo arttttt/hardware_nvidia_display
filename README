@@ -5,5 +5,5 @@ supported hwcomposer for flounder.
 
 Future hardware composers should be written using drm_hwcomposer.
 
-To enable, add "TARGET_USES_HWC2 := true" to mocha's BoardConfig.mk.
+To enable, add "TARGET_USES_HWC2 := true" to device BoardConfig.mk.
 To disable, remove "TARGET_USES_HWC2 := true" and run "make installclean"

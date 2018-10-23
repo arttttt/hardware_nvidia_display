@@ -15,7 +15,7 @@
 
 # This hardware composer implements version 2.0. It is to be used as a reference
 # guide for writing HWC 2.0 implementations. To enable, add
-# "TARGET_USES_HWC2 := true" to mocha's BoardConfig.mk.
+# "TARGET_USES_HWC2 := true" to device BoardConfig.mk.
 # It is a 2D HAL (no GL acceleration). Enabling it will degrade performance.
 # To disable, remove "TARGET_USES_HWC2 := true" and run "make installclean"
 ifeq ($(TARGET_USES_HWC2),true)
