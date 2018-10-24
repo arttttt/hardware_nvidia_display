@@ -18,22 +18,23 @@
 # "TARGET_USES_HWC2 := true" to device BoardConfig.mk.
 # It is a 2D HAL (no GL acceleration). Enabling it will degrade performance.
 # To disable, remove "TARGET_USES_HWC2 := true" and run "make installclean"
-ifeq ($(TARGET_USES_HWC2),true)
-
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
 # HAL module implemenation, not prelinked and stored in
 # hw/<OVERLAY_HARDWARE_MODULE_ID>.<ro.product.board>.so
-LOCAL_MODULE_RELATIVE_PATH := hw
+LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)/hw
 
-LOCAL_MODULE := hwcomposer.$(TARGET_BOARD_PLATFORM)
+LOCAL_MODULE := hwcomposer2.$(TARGET_BOARD_PLATFORM)
 
 LOCAL_SHARED_LIBRARIES := \
-	liblog
+	liblog \
+	libutils
 
-LOCAL_SRC_FILES := hwc2.cpp
+LOCAL_SRC_FILES := \
+	hwc2.cpp \
+	hwc2_dev.cpp
 
 LOCAL_MODLE_TAGS := optional
 
@@ -47,5 +48,3 @@ LOCAL_LDFLAGS := -Wl,-Bsymbolic
 include $(BUILD_SHARED_LIBRARY)
 
 include $(call all-makefiles-under,$(LOCAL_PATH))
-
-endif # TARGET_USES_HWC2

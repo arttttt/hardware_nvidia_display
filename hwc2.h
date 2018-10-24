@@ -19,8 +19,36 @@
 
 #include <hardware/hwcomposer2.h>
 
+/*class hwc2_display {
+public:
+    hwc2_display(hwc2_display_t id, int fb_intf_fd);
+    ~hwc2_display();
+    hwc2_display_t get_id() const { return id; }
+    static hwc2_display_t get_next_id();
+    static void reset_ids() { display_cnt = 0; }
+private:
+    hwc2_display_t id;
+    int fb_intf_fd;
+    static uint64_t display_cnt;
+};*/
+
+struct fb_device {
+    int fd;
+};
+
+class hwc2_dev {
+public:
+    hwc2_dev();
+    ~hwc2_dev();
+    int open_fb_device();
+    
+private:
+    int open_fb_display(struct fb_device *dev);
+};
+
 struct hwc2_context {
-    hwc2_device_t hwc2_device; /* must be first member in struct */
+    hwc2_device_t hwc2_device;
+    hwc2_dev *hwc2_dev;
 };
 
 #endif /* ifndef _HWC2_H */
