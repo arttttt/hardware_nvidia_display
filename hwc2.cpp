@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2018 arttttt <artem-bambalov@yandex.ru>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -424,8 +424,6 @@ static int hwc2_device_open(const struct hw_module_t *module, const char *name,
         return -1;
     }
     
-    ALOGE("hwc2_dev created");
-    
     int ret = ctx->hwc2_dev->open_fb_device();
     if (ret < 0) {
         ALOGE("failed to open adf device: %s", strerror(ret));
@@ -433,8 +431,6 @@ static int hwc2_device_open(const struct hw_module_t *module, const char *name,
         delete ctx;
         return ret;
     }
-    
-    ALOGE("open_fb_device successful");
 
     *hw_device = &ctx->hwc2_device.common;
 

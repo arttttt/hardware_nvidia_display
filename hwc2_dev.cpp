@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2018 arttttt <artem-bambalov@yandex.ru>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,29 @@
 #include <cstdlib>
 #include <vector>
 
+#include "include/tegrafb.h"
 #include "hwc2.h"
 
 hwc2_dev::hwc2_dev() { }
       
 hwc2_dev::~hwc2_dev() { }
 
+const char* fb_path = "/dev/graphics/fb0";
+
+void get_modes(struct fb_device *dev) 
+{
+    struct tegra_fb_modedb fb_modedb;
+    
+    if (ioctl(dev->fd, FBIO_TEGRA_GET_MODEDB, &fb_modedb)) {
+        return;
+    }
+
+    ALOGD("Display: found %d modes", fb_modedb.modedb_len);
+}
+
 int hwc2_dev::open_fb_device()
 {
+    int fb;
     struct fb_device *dev;
     
     dev = (struct fb_device*) malloc(sizeof(struct fb_device));
@@ -36,17 +51,6 @@ int hwc2_dev::open_fb_device()
     
     memset(dev, 0, sizeof(struct fb_device));
     
-    open_fb_display(dev);
-    
-    return 0;
-}
-
-const char* fb_path = "/dev/graphics/fb0";
-
-int hwc2_dev::open_fb_display(struct fb_device *dev) 
-{
-    int fb;
-    
     fb = open(fb_path, O_RDWR, 0);
     
     if (fb == -1) {
@@ -55,6 +59,8 @@ int hwc2_dev::open_fb_display(struct fb_device *dev)
     }
     
     dev->fd = fb;
+    
+    get_modes(dev);
     
     return 0;
 }
