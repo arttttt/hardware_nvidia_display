@@ -60,5 +60,17 @@ int nvfb_device_open(int id, int flags, struct nvfb_device *dev)
             dev->vi.green.offset, dev->vi.green.length,
             dev->vi.blue.offset, dev->vi.blue.length);
 
+    nvfb_blank(dev, true);
+    nvfb_blank(dev, false);
+
     return 0;
+}
+
+void nvfb_blank(struct nvfb_device *dev, bool blank)
+{
+    int ret;
+
+    ret = ioctl(dev->fd, FBIOBLANK, blank ? FB_BLANK_POWERDOWN : FB_BLANK_UNBLANK);
+    if (ret < 0)
+        ALOGE("ioctl(): blank");
 }

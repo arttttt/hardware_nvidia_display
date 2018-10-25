@@ -29,3 +29,4 @@ struct nvfb_device {
 };
 
 int nvfb_device_open(int id, int flags, struct nvfb_device *dev);
+void nvfb_blank(struct nvfb_device *dev, bool blank);
