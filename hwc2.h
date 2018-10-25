@@ -33,7 +33,8 @@ public:
             hwc2_function_pointer_t pointer);
 
     void call_hotplug(hwc2_display_t dpy_id, hwc2_connection_t connection);
- private:
+	void call_vsync(hwc2_display_t dpy_id, int64_t timestamp);
+private:
     std::mutex state_mutex;
     std::queue<std::pair<hwc2_display_t, hwc2_connection_t>> hotplug_pending;
 
@@ -86,6 +87,7 @@ public:
     hwc2_display_t get_id() const { return id; }
     hwc2_display_type_t get_type() const { return type; }
     hwc2_connection_t get_connection() const { return connection; }
+    hwc2_vsync_t get_vsync_enabled() const { return vsync_enabled; }
     int retrieve_display_configs();
     hwc2_error_t get_display_attribute(hwc2_config_t config,
                     hwc2_attribute_t attribute, int32_t *out_value) const;
@@ -94,6 +96,7 @@ public:
     hwc2_error_t get_active_config(hwc2_config_t *out_config) const;
     hwc2_error_t set_active_config(hwc2_config_t config);
     hwc2_error_t set_connection(hwc2_connection_t connection);
+    hwc2_error_t set_vsync_enabled(hwc2_vsync_t enabled);
     hwc2_error_t set_power_mode(hwc2_power_mode_t mode);
     hwc2_error_t get_doze_support(int32_t *out_support) const;
     hwc2_error_t create_layer(hwc2_layer_t *out_layer);
@@ -109,6 +112,7 @@ private:
     std::unordered_map<hwc2_layer_t, hwc2_layer> layers;
     hwc2_power_mode_t power_mode;
     hwc2_display_type_t type;
+    hwc2_vsync_t vsync_enabled;
     static uint64_t display_cnt;
 };
 
@@ -134,6 +138,8 @@ public:
     hwc2_error_t create_layer(hwc2_display_t dpy_id, hwc2_layer_t *out_layer);
     hwc2_error_t destroy_layer(hwc2_display_t dpy_id, hwc2_layer_t lyr_id);
     void hotplug(hwc2_display_t dpy_id, hwc2_connection_t connection);
+    void vsync(hwc2_display_t dpy_id, uint64_t timestamp);
+    hwc2_error_t set_vsync_enabled(hwc2_display_t dpy_id, hwc2_vsync_t enabled);
     hwc2_error_t register_callback(hwc2_callback_descriptor_t descriptor,
                     hwc2_callback_data_t callback_data,
                     hwc2_function_pointer_t pointer);
