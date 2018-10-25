@@ -39,8 +39,8 @@ const struct nvfb_callbacks hwc2_fb_callbacks = {
 };
 
 hwc2_dev::hwc2_dev()
-    : callback_handler(),
-    : displays() { }
+	: callback_handler(),
+	  displays() { }
 
 hwc2_dev::~hwc2_dev() 
 {
