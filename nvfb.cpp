@@ -35,18 +35,18 @@ int nvfb_device_open(int id, int flags, struct nvfb_device *dev)
     snprintf(filename, sizeof(filename), FB_BASE_PATH "fb%u", id);
     dev->fd = open(filename, flags);
     if (dev->fd < 0)
-        return -errno;
+        return -1;
 
     if (ioctl(dev->fd, FBIOGET_VSCREENINFO, &dev->vi) < 0) {
         ALOGE("failed to get fb0 info (FBIOGET_VSCREENINFO)");
         close(dev->fd);
-        return NULL;
+        return -1;
     }
 
     if (ioctl(dev->fd, FBIOGET_FSCREENINFO, &dev->fi) < 0) {
         ALOGE("failed to get fb0 info (FBIOGET_FSCREENINFO)");
         close(dev->fd);
-        return NULL;
+        return -1;
 	}
 
     ALOGD("fb%d reports (possibly inaccurate):\n"

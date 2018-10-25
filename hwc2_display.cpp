@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
+#include <array>
 #include <cutils/log.h>
 #include <inttypes.h>
 #include <unistd.h>
+#include <vector>
 
 #include "hwc2.h"
 
@@ -25,13 +27,29 @@ uint64_t hwc2_display::display_cnt = 0;
 hwc2_display::hwc2_display(hwc2_display_t id,
             const struct nvfb_device &fb_dev,
             hwc2_connection_t connection)
-    : id(id),
+    : active_config(0),
+      configs(),
       connection(connection),
+      id(id),
       fb_dev(fb_dev) { }
 
 hwc2_display::~hwc2_display()
 {
     close(fb_dev.fd);
+}
+
+int hwc2_display::retrieve_display_configs()
+{
+    hwc2_config config;
+    config.set_attribute(HWC2_ATTRIBUTE_WIDTH, fb_dev.vi.xres);
+    config.set_attribute(HWC2_ATTRIBUTE_HEIGHT, fb_dev.vi.yres);
+    config.set_attribute(HWC2_ATTRIBUTE_VSYNC_PERIOD, fb_dev.vi.vsync_len);
+    config.set_attribute(HWC2_ATTRIBUTE_DPI_X, 324);
+    config.set_attribute(HWC2_ATTRIBUTE_DPI_Y, 324);
+
+    configs.emplace(0, hwc2_config());
+
+    return 0;
 }
 
 hwc2_error_t hwc2_display::set_connection(hwc2_connection_t connection)

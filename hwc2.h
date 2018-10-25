@@ -45,6 +45,22 @@ public:
     HWC2_PFN_VSYNC vsync;
 };
 
+class hwc2_config {
+public:
+    hwc2_config();
+
+    int set_attribute(hwc2_attribute_t attribute, int32_t value);
+
+private:
+    int32_t width;
+    int32_t height;
+
+    int32_t vsync_period;
+
+    int32_t dpi_x;
+    int32_t dpi_y;
+};
+
 class hwc2_display {
 public:
     hwc2_display(hwc2_display_t id, 
@@ -53,12 +69,15 @@ public:
     ~hwc2_display();
     hwc2_display_t get_id() const { return id; }
     hwc2_connection_t get_connection() const { return connection; }
+    int retrieve_display_configs();
     hwc2_error_t set_connection(hwc2_connection_t connection);
     static hwc2_display_t get_next_id();
     static void reset_ids() { display_cnt = 0; }
 private:
-    hwc2_display_t id;
+    hwc2_config_t active_config;
+    std::unordered_map<hwc2_config_t, hwc2_config> configs;
     hwc2_connection_t connection;
+    hwc2_display_t id;
     struct nvfb_device fb_dev;
     static uint64_t display_cnt;
 };

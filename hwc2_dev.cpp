@@ -54,13 +54,25 @@ hwc2_dev::~hwc2_dev()
 int hwc2_dev::open_fb_device()
 {
     int ret = open_fb_display(0);
+    if (ret < 0)
+        goto err;
 
 	ALOGE("fb%u device: %s successfully opened", 0, strerror(ret));
+
+    for (auto &dpy: displays) {
+        ret = dpy.second.retrieve_display_configs();
+        if (ret < 0) {
+            ALOGE("dpy %" PRIu64 ": failed to retrieve display configs: %s",
+                    dpy.second.get_id(), strerror(ret));
+            goto err;
+        }
+    }
 
     for (auto &dpy: displays)
         callback_handler.call_hotplug(dpy.second.get_id(),
                 dpy.second.get_connection());
 
+err:
     return ret;
 }
 

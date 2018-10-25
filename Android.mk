@@ -36,6 +36,7 @@ LOCAL_SRC_FILES := \
 	nvfb.cpp \
 	hwc2.cpp \
 	hwc2_callback.cpp \
+	hwc2_config.cpp \
 	hwc2_dev.cpp \
 	hwc2_display.cpp
 
