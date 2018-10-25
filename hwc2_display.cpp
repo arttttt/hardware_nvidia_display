@@ -14,19 +14,36 @@
  * limitations under the License.
  */
 
+#include <cutils/log.h>
+#include <inttypes.h>
 #include <unistd.h>
 
 #include "hwc2.h"
 
 uint64_t hwc2_display::display_cnt = 0;
 
-hwc2_display::hwc2_display(hwc2_display_t id, const struct nvfb_device &fb_dev)
+hwc2_display::hwc2_display(hwc2_display_t id,
+            const struct nvfb_device &fb_dev,
+            hwc2_connection_t connection)
     : id(id),
+      connection(connection),
       fb_dev(fb_dev) { }
 
 hwc2_display::~hwc2_display()
 {
     close(fb_dev.fd);
+}
+
+hwc2_error_t hwc2_display::set_connection(hwc2_connection_t connection)
+{
+    if (connection == HWC2_CONNECTION_INVALID) {
+        ALOGE("dpy %" PRIu64 ": invalid connection", id);
+        return HWC2_ERROR_BAD_PARAMETER;
+    }
+
+    this->connection = connection;
+
+    return HWC2_ERROR_NONE;
 }
 
 hwc2_display_t hwc2_display::get_next_id()

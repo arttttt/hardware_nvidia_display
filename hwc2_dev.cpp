@@ -17,6 +17,7 @@
 #include <cutils/log.h>
 #include <cstdlib>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <vector>
 
 #include "hwc2.h"
@@ -26,11 +27,14 @@ static void hwc2_vsync(void* /*data*/, int /*dpy_id*/, uint64_t /*timestamp*/)
     return;
 }
 
-static void hwc2_hotplug(void* /*data*/, int /*dpy_id*/, bool /*connected*/)
+static void hwc2_hotplug(void *data, int dpy_id, bool connected)
 {
 	ALOGE("hwc2_hotplug event\n");
 
-    return;
+    hwc2_dev *dev = static_cast<hwc2_dev *>(data);
+    dev->hotplug(static_cast<hwc2_display_t>(dpy_id),
+            (connected)? HWC2_CONNECTION_CONNECTED:
+            HWC2_CONNECTION_DISCONNECTED);
 }
 
 const struct nvfb_callbacks hwc2_fb_callbacks = {
@@ -53,7 +57,27 @@ int hwc2_dev::open_fb_device()
 
 	ALOGE("fb%u device: %s successfully opened", 0, strerror(ret));
 
+    for (auto &dpy: displays)
+        callback_handler.call_hotplug(dpy.second.get_id(),
+                dpy.second.get_connection());
+
     return ret;
+}
+
+void hwc2_dev::hotplug(hwc2_display_t dpy_id, hwc2_connection_t connection)
+{
+    auto it = displays.find(dpy_id);
+    if (it == displays.end()) {
+        ALOGW("dpy %" PRIu64 ": invalid display handle preventing hotplug"
+                " callback", dpy_id);
+        return;
+    }
+
+    hwc2_error_t ret = it->second.set_connection(connection);
+    if (ret != HWC2_ERROR_NONE)
+        return;
+
+    callback_handler.call_hotplug(dpy_id, connection);
 }
 
 hwc2_error_t hwc2_dev::register_callback(hwc2_callback_descriptor_t descriptor,
@@ -85,7 +109,7 @@ int hwc2_dev::open_fb_display(int fb_id)
 
     hwc2_display_t dpy_id = hwc2_display::get_next_id();
     displays.emplace(std::piecewise_construct, std::forward_as_tuple(dpy_id),
-            std::forward_as_tuple(dpy_id, nvfb_dev));
+            std::forward_as_tuple(dpy_id, nvfb_dev, HWC2_CONNECTION_CONNECTED));
 
     return 0;
 }

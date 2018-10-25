@@ -20,6 +20,8 @@
 #include <hardware/hwcomposer2.h>
 
 #include <unordered_map>
+#include <queue>
+#include <mutex>
 
 #include "nvfb.h"
 
@@ -29,7 +31,12 @@ public:
     hwc2_error_t register_callback(hwc2_callback_descriptor_t descriptor,
             hwc2_callback_data_t callback_data,
             hwc2_function_pointer_t pointer);
+
+    void call_hotplug(hwc2_display_t dpy_id, hwc2_connection_t connection);
  private:
+    std::mutex state_mutex;
+    std::queue<std::pair<hwc2_display_t, hwc2_connection_t>> hotplug_pending;
+
     hwc2_callback_data_t hotplug_data;
     HWC2_PFN_HOTPLUG hotplug;
     hwc2_callback_data_t refresh_data;
@@ -40,13 +47,18 @@ public:
 
 class hwc2_display {
 public:
-    hwc2_display(hwc2_display_t id, const struct nvfb_device &fb_dev);
+    hwc2_display(hwc2_display_t id, 
+                    const struct nvfb_device &fb_dev,
+                    hwc2_connection_t connection);
     ~hwc2_display();
     hwc2_display_t get_id() const { return id; }
+    hwc2_connection_t get_connection() const { return connection; }
+    hwc2_error_t set_connection(hwc2_connection_t connection);
     static hwc2_display_t get_next_id();
     static void reset_ids() { display_cnt = 0; }
 private:
     hwc2_display_t id;
+    hwc2_connection_t connection;
     struct nvfb_device fb_dev;
     static uint64_t display_cnt;
 };
@@ -57,6 +69,8 @@ public:
     ~hwc2_dev();
 
     int open_fb_device();
+
+    void hotplug(hwc2_display_t dpy_id, hwc2_connection_t connection);
     hwc2_error_t register_callback(hwc2_callback_descriptor_t descriptor,
                     hwc2_callback_data_t callback_data,
                     hwc2_function_pointer_t pointer);
