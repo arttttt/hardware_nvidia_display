@@ -21,7 +21,7 @@
 uint64_t hwc2_display::display_cnt = 0;
 
 hwc2_display::hwc2_display(hwc2_display_t id, int fb_intf_fd,
-        const struct fb_device &fb_dev)
+        const struct nvfb_device &fb_dev)
     : id(id),
       fb_intf_fd(fb_intf_fd),
       fb_dev(fb_dev) { }

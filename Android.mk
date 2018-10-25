@@ -33,7 +33,7 @@ LOCAL_SHARED_LIBRARIES := \
 	libutils
 
 LOCAL_SRC_FILES := \
-	fb.cpp \
+	nvfb.cpp \
 	hwc2.cpp \
 	hwc2_dev.cpp \
 	hwc2_display.cpp

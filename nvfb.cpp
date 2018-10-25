@@ -19,11 +19,11 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "fb.h"
+#include "nvfb.h"
 
 #define FB_BASE_PATH "/dev/graphics/"
 
-int fb_device_open(int id, int flags, struct fb_device *dev)
+int nvfb_device_open(int id, int flags, struct nvfb_device *dev)
 {
     char filename[64];
 

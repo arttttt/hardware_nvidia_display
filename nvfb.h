@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-struct fb_callbacks {
+struct nvfb_callbacks {
     void (*vsync)(void *data, int disp, uint64_t timestamp);
     void (*hotplug)(void *data, int disp, bool connected);
 };
 
-struct fb_device {
+struct nvfb_device {
     int id;
     int fd;
 };
 
-int fb_device_open(int id, int flags, struct fb_device *dev);
+int nvfb_device_open(int id, int flags, struct nvfb_device *dev);

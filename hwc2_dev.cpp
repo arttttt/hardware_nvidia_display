@@ -31,7 +31,7 @@ static void hwc2_hotplug(void* /*data*/, int /*dpy_id*/, bool /*connected*/)
     return;
 }
 
-const struct fb_callbacks hwc2_fb_callbacks = {
+const struct nvfb_callbacks hwc2_fb_callbacks = {
     .vsync = hwc2_vsync,
     .hotplug = hwc2_hotplug,
 };
@@ -53,9 +53,9 @@ int hwc2_dev::open_fb_device()
 
 int hwc2_dev::open_fb_display(int fb_id)
 {
-    struct fb_device fb_dev;
+    struct nvfb_device nvfb_dev;
 
-    int ret = fb_device_open(fb_id, O_RDWR, &fb_dev);
+    int ret = nvfb_device_open(fb_id, O_RDWR, &nvfb_dev);
     if (ret < 0) {
         ALOGE("failed to open fb%u device: %s", fb_id, strerror(ret));
         return ret;
