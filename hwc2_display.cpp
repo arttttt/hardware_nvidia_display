@@ -96,6 +96,32 @@ hwc2_error_t hwc2_display::get_display_attribute(hwc2_config_t config,
     return HWC2_ERROR_NONE;
 }
 
+hwc2_error_t hwc2_display::get_active_config(hwc2_config_t *out_config) const
+{
+    if (!configs.size()) {
+        ALOGE("dpy %" PRIu64 ": no active config", id);
+        return HWC2_ERROR_BAD_CONFIG;
+    }
+
+    *out_config = active_config;
+     eturn HWC2_ERROR_NONE;
+}
+
+/*
+ * It's just a stub. Will be implemented later
+ */
+hwc2_error_t hwc2_display::set_active_config(hwc2_config_t config)
+{
+    if (config >= configs.size()) {
+        ALOGE("dpy %" PRIu64 ": bad config", id);
+        return HWC2_ERROR_BAD_CONFIG;
+    }
+
+    active_config = config;
+
+    return HWC2_ERROR_NONE;
+}
+
 hwc2_error_t hwc2_display::create_layer(hwc2_layer_t *out_layer)
 {
     hwc2_layer_t lyr_id = hwc2_layer::get_next_id();

@@ -90,6 +90,8 @@ public:
                     hwc2_attribute_t attribute, int32_t *out_value) const;
     hwc2_error_t get_display_configs(uint32_t *out_num_configs,
                     hwc2_config_t *out_configs) const;
+    hwc2_error_t get_active_config(hwc2_config_t *out_config) const;
+    hwc2_error_t set_active_config(hwc2_config_t config);
     hwc2_error_t set_connection(hwc2_connection_t connection);
     hwc2_error_t create_layer(hwc2_layer_t *out_layer);
     hwc2_error_t destroy_layer(hwc2_layer_t lyr_id);
@@ -120,6 +122,9 @@ public:
                     int32_t *out_value) const;
     hwc2_error_t get_display_configs(hwc2_display_t dpy_id,
                     uint32_t *out_num_configs, hwc2_config_t *out_configs) const;
+    hwc2_error_t get_active_config(hwc2_display_t dpy_id,
+                    hwc2_config_t *out_config) const;
+    hwc2_error_t set_active_config(hwc2_display_t dpy_id, hwc2_config_t config);
     hwc2_error_t create_layer(hwc2_display_t dpy_id, hwc2_layer_t *out_layer);
     hwc2_error_t destroy_layer(hwc2_display_t dpy_id, hwc2_layer_t lyr_id);
     void hotplug(hwc2_display_t dpy_id, hwc2_connection_t connection);
