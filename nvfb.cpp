@@ -19,7 +19,9 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <unistd.h>
 
 #include "nvfb.h"
@@ -60,14 +62,14 @@ int nvfb_device_open(int id, int flags, struct nvfb_device *dev)
             dev->vi.green.offset, dev->vi.green.length,
             dev->vi.blue.offset, dev->vi.blue.length);
 
-    dev->data = mmap(0, fi.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fd, 0);
+    dev->data = mmap(0, dev->fi.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fd, 0);
     if (dev->data == MAP_FAILED) {
         ALOGE("failed to mmap framebuffer");
         close(dev->fd);
         return NULL;
     }
 
-    memset(dev->data, 0, fi.smem_len);
+    memset(dev->data, 0, dev->fi.smem_len);
 
     nvfb_blank(dev, true);
     nvfb_blank(dev, false);
@@ -86,5 +88,5 @@ void nvfb_blank(struct nvfb_device *dev, bool blank)
 
 void nvfb_write(struct nvfb_device *dev, void* new_data)
 {
-    memcpy(dev->data, new_data, sizeof(*new_data));
+    memcpy(dev->data, new_data, sizeof(new_data));
 }
