@@ -13,43 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-#include <fcntl.h>
-#include <cutils/log.h>
-#include <cstdlib>
-#include <vector>
 
-#include "hwc2.h"
-
-static void hwc2_vsync(void* /*data*/, int /*dpy_id*/, uint64_t /*timestamp*/)
-{
-    return;
-}
-
-static void hwc2_hotplug(void* /*data*/, int /*dpy_id*/, bool /*connected*/)
-{
-    return;
-}
-
- onst struct fb_callbacks hwc2_fb_callbacks = {
-    .vsync = hwc2_vsync,
-    .hotplug = hwc2_hotplug,
+struct fb_callbacks {
+    int (*vsync)(void *data, int disp, uint64_t timestamp);
+    int (*hotplug)(vvoid *data, int disp, bool connected);
 };
 
-hwc2_dev::hwc2_dev()
-    : displays() { }
-
-hwc2_dev::~hwc2_dev() 
-{
-    hwc2_display::reset_ids();
-}
-
-int hwc2_dev::open_fb_device()
-{
-    return 0;
-}
-
-int open_fb_display(int fb_id)
-{
-    return 0;
-}
+ssize_t fb_devices(int **ids);

@@ -33,8 +33,10 @@ LOCAL_SHARED_LIBRARIES := \
 	libutils
 
 LOCAL_SRC_FILES := \
+	fb.cpp \
 	hwc2.cpp \
-	hwc2_dev.cpp
+	hwc2_dev.cpp \
+	hwc2_display.cpp
 
 LOCAL_MODLE_TAGS := optional
 

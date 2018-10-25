@@ -19,8 +19,20 @@
 
 #include <hardware/hwcomposer2.h>
 
-struct fb_device {
-    int fd;
+#include <unordered_map>
+
+#include "fb.h"
+
+class hwc2_display {
+public:
+    hwc2_display(hwc2_display_t id), int fb_intf_fd;
+    ~hwc2_display();
+     hwc2_display_t get_id() const { return id; }
+     static hwc2_display_t get_next_id();
+     static void reset_ids() { display_cnt = 0; }
+private:
+    hwc2_display_t id;
+    static uint64_t display_cnt;
 };
 
 class hwc2_dev {
@@ -28,8 +40,10 @@ public:
     hwc2_dev();
     ~hwc2_dev();
     int open_fb_device();
-    
 private:
+    std::unordered_map<hwc2_display_t, hwc2_display> displays;
+
+    int open_fb_display(int fb_id);
 };
 
 struct hwc2_context {
