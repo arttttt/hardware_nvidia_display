@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
+#include <unistd.h>
+
 #include "hwc2.h"
 
- uint64_t hwc2_display::display_cnt = 0;
+uint64_t hwc2_display::display_cnt = 0;
 
-hwc2_display::hwc2_display(hwc2_display_t id, int fb_intf_fd)
+hwc2_display::hwc2_display(hwc2_display_t id, int fb_intf_fd,
+        const struct fb_device &fb_dev)
     : id(id),
-      fb_intf_fd(adf_intf_fd) { }
+      fb_intf_fd(fb_intf_fd),
+      fb_dev(fb_dev) { }
 
 hwc2_display::~hwc2_display()
 {

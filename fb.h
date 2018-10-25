@@ -15,8 +15,13 @@
  */
 
 struct fb_callbacks {
-    int (*vsync)(void *data, int disp, uint64_t timestamp);
-    int (*hotplug)(vvoid *data, int disp, bool connected);
+    void (*vsync)(void *data, int disp, uint64_t timestamp);
+    void (*hotplug)(void *data, int disp, bool connected);
 };
 
-ssize_t fb_devices(int **ids);
+struct fb_device {
+    int id;
+    int fd;
+};
+
+int fb_device_open(int id, int flags, struct fb_device *dev);
