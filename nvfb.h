@@ -22,6 +22,7 @@ struct nvfb_callbacks {
 };
 
 struct nvfb_device {
+	void* data;
     int id;
     int fd;
     fb_fix_screeninfo fi;
@@ -30,3 +31,4 @@ struct nvfb_device {
 
 int nvfb_device_open(int id, int flags, struct nvfb_device *dev);
 void nvfb_blank(struct nvfb_device *dev, bool blank);
+void nvfb_write(struct nvfb_device *dev, void* new_data);
