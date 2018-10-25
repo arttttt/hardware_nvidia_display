@@ -39,6 +39,7 @@ const struct nvfb_callbacks hwc2_fb_callbacks = {
 };
 
 hwc2_dev::hwc2_dev()
+    : callback_handler(),
     : displays() { }
 
 hwc2_dev::~hwc2_dev() 
@@ -53,6 +54,17 @@ int hwc2_dev::open_fb_device()
 	ALOGE("fb%u device: %s successfully opened", 0, strerror(ret));
 
     return ret;
+}
+
+hwc2_error_t hwc2_dev::register_callback(hwc2_callback_descriptor_t descriptor,
+        hwc2_callback_data_t callback_data, hwc2_function_pointer_t pointer)
+{
+    if (descriptor == HWC2_CALLBACK_INVALID) {
+        ALOGE("invalid callback descriptor %u", descriptor);
+        return HWC2_ERROR_BAD_PARAMETER;
+    }
+     return callback_handler.register_callback(descriptor, callback_data,
+            pointer);
 }
 
 int hwc2_dev::open_fb_display(int fb_id)

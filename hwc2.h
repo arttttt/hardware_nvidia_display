@@ -23,6 +23,21 @@
 
 #include "nvfb.h"
 
+class hwc2_callback {
+public:
+    hwc2_callback();
+    hwc2_error_t register_callback(hwc2_callback_descriptor_t descriptor,
+            hwc2_callback_data_t callback_data,
+            hwc2_function_pointer_t pointer);
+ private:
+    hwc2_callback_data_t hotplug_data;
+    HWC2_PFN_HOTPLUG hotplug;
+    hwc2_callback_data_t refresh_data;
+    HWC2_PFN_REFRESH refresh;
+    hwc2_callback_data_t vsync_data;
+    HWC2_PFN_VSYNC vsync;
+};
+
 class hwc2_display {
 public:
     hwc2_display(hwc2_display_t id, const struct nvfb_device &fb_dev);
@@ -40,8 +55,13 @@ class hwc2_dev {
 public:
     hwc2_dev();
     ~hwc2_dev();
+
     int open_fb_device();
+    hwc2_error_t register_callback(hwc2_callback_descriptor_t descriptor,
+                    hwc2_callback_data_t callback_data,
+                    hwc2_function_pointer_t pointer);
 private:
+    hwc2_callback callback_handler;
     std::unordered_map<hwc2_display_t, hwc2_display> displays;
 
     int open_fb_display(int fb_id);
