@@ -80,6 +80,7 @@ public:
     hwc2_display(hwc2_display_t id, 
                     const struct nvfb_device &fb_dev,
                     hwc2_connection_t connection,
+                    hwc2_power_mode_t power_mode,
                     hwc2_display_type_t type);
     ~hwc2_display();
     hwc2_display_t get_id() const { return id; }
@@ -93,6 +94,8 @@ public:
     hwc2_error_t get_active_config(hwc2_config_t *out_config) const;
     hwc2_error_t set_active_config(hwc2_config_t config);
     hwc2_error_t set_connection(hwc2_connection_t connection);
+    hwc2_error_t set_power_mode(hwc2_power_mode_t mode);
+    hwc2_error_t get_doze_support(int32_t *out_support) const;
     hwc2_error_t create_layer(hwc2_layer_t *out_layer);
     hwc2_error_t destroy_layer(hwc2_layer_t lyr_id);
     static hwc2_display_t get_next_id();
@@ -104,6 +107,7 @@ private:
     hwc2_display_t id;
     struct nvfb_device fb_dev;
     std::unordered_map<hwc2_layer_t, hwc2_layer> layers;
+    hwc2_power_mode_t power_mode;
     hwc2_display_type_t type;
     static uint64_t display_cnt;
 };
@@ -125,6 +129,8 @@ public:
     hwc2_error_t get_active_config(hwc2_display_t dpy_id,
                     hwc2_config_t *out_config) const;
     hwc2_error_t set_active_config(hwc2_display_t dpy_id, hwc2_config_t config);
+    hwc2_error_t set_power_mode(hwc2_display_t dpy_id, hwc2_power_mode_t mode);
+    hwc2_error_t get_doze_support(hwc2_display_t dpy_id, int32_t *out_support) const;
     hwc2_error_t create_layer(hwc2_display_t dpy_id, hwc2_layer_t *out_layer);
     hwc2_error_t destroy_layer(hwc2_display_t dpy_id, hwc2_layer_t lyr_id);
     void hotplug(hwc2_display_t dpy_id, hwc2_connection_t connection);

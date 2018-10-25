@@ -40,17 +40,41 @@ hwc2_error_t hwc2_dev::get_display_type(hwc2_display_t dpy_id,
     return HWC2_ERROR_NONE;
 }
 
-hwc2_error_t hwc2_dev::get_display_attribute(hwc2_display_t dpy_id,
-        hwc2_config_t config, hwc2_attribute_t attribute, int32_t *out_value)
-        const
+hwc2_error_t hwc2_dev::set_power_mode(hwc2_display_t dpy_id,
+        hwc2_power_mode_t mode)
 {
     auto it = displays.find(dpy_id);
     if (it == displays.end()) {
         ALOGE("dpy %" PRIu64 ": invalid display handle", dpy_id);
         return HWC2_ERROR_BAD_DISPLAY;
     }
-     return it->second.get_display_attribute(config, attribute, out_value);
+     return it->second.set_power_mode(mode);
 }
+
+hwc2_error_t hwc2_dev::get_doze_support(hwc2_display_t dpy_id,
+        int32_t *out_support) const
+{
+    auto it = displays.find(dpy_id);
+    if (it == displays.end()) {
+        ALOGE("dpy %" PRIu64 ": invalid display handle", dpy_id);
+        return HWC2_ERROR_BAD_DISPLAY;
+    }
+
+    return it->second.get_doze_support(out_support);
+}
+
+hwc2_error_t hwc2_dev::get_display_attribute(hwc2_display_t dpy_id,
+        hwc2_config_t config, hwc2_attribute_t attribute, int32_t *out_value) const
+{
+    auto it = displays.find(dpy_id);
+    if (it == displays.end()) {
+        ALOGE("dpy %" PRIu64 ": invalid display handle", dpy_id);
+        return HWC2_ERROR_BAD_DISPLAY;
+    }
+
+    return it->second.get_display_attribute(config, attribute, out_value);
+}
+
 hwc2_error_t hwc2_dev::get_display_configs(hwc2_display_t dpy_id,
         uint32_t *out_num_configs, hwc2_config_t *out_configs) const
 {
@@ -204,6 +228,7 @@ int hwc2_dev::open_fb_display(int fb_id)
             std::forward_as_tuple(dpy_id,
                                     nvfb_dev,
                                     HWC2_CONNECTION_CONNECTED,
+                                    HWC2_POWER_MODE_ON,
                                     HWC2_DISPLAY_TYPE_PHYSICAL));
 
     return 0;
