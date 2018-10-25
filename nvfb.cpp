@@ -62,7 +62,7 @@ int nvfb_device_open(int id, int flags, struct nvfb_device *dev)
 
     dev->data = mmap(0, fi.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fd, 0);
     if (dev->data == MAP_FAILED) {
-        perror("failed to mmap framebuffer");
+        ALOGE("failed to mmap framebuffer");
         close(dev->fd);
         return NULL;
     }
