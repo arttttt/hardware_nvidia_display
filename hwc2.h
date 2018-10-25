@@ -19,9 +19,10 @@
 
 #include <hardware/hwcomposer2.h>
 
-#include <unordered_map>
-#include <queue>
 #include <mutex>
+#include <queue>
+#include <string>
+#include <unordered_map>
 
 #include "nvfb.h"
 
@@ -84,6 +85,8 @@ public:
                     hwc2_power_mode_t power_mode,
                     hwc2_display_type_t type);
     ~hwc2_display();
+    hwc2_error_t get_name(uint32_t *out_size, char *out_name) const;
+    void init_name();
     hwc2_display_t get_id() const { return id; }
     hwc2_display_type_t get_type() const { return type; }
     hwc2_connection_t get_connection() const { return connection; }
@@ -110,6 +113,7 @@ private:
     hwc2_display_t id;
     struct nvfb_device fb_dev;
     std::unordered_map<hwc2_layer_t, hwc2_layer> layers;
+    std::string name;
     hwc2_power_mode_t power_mode;
     hwc2_display_type_t type;
     hwc2_vsync_t vsync_enabled;
@@ -123,6 +127,8 @@ public:
 
     int open_fb_device();
 
+    hwc2_error_t get_display_name(hwc2_display_t dpy_id, uint32_t *out_size,
+                    char *out_name) const;
     hwc2_error_t get_display_type(hwc2_display_t dpy_id,
                     hwc2_display_type_t *out_type) const;
     hwc2_error_t get_display_attribute(hwc2_display_t dpy_id,
