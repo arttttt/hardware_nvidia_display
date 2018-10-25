@@ -154,11 +154,6 @@ static void hwc2_hotplug(void *data, int dpy_id, bool connected)
             HWC2_CONNECTION_DISCONNECTED);
 }
 
-const struct nvfb_callbacks hwc2_fb_callbacks = {
-    .vsync = hwc2_vsync,
-    .hotplug = hwc2_hotplug,
-};
-
 hwc2_dev::hwc2_dev()
 	: callback_handler(),
 	  displays() { }

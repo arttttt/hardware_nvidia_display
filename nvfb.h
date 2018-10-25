@@ -16,11 +16,6 @@
 
 #include <linux/fb.h>
 
-struct nvfb_callbacks {
-    void (*vsync)(void *data, int disp, uint64_t timestamp);
-    void (*hotplug)(void *data, int disp, bool connected);
-};
-
 struct nvfb_device {
 	void* data;
     int id;
