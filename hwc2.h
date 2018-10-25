@@ -61,6 +61,19 @@ private:
     int32_t dpi_y;
 };
 
+class hwc2_layer {
+public:
+    hwc2_layer(hwc2_layer_t id);
+
+    hwc2_layer_t get_id() const { return id; }
+
+    static hwc2_layer_t get_next_id();
+private:
+    hwc2_layer_t id;
+
+    static uint64_t layer_cnt;
+};
+
 class hwc2_display {
 public:
     hwc2_display(hwc2_display_t id, 
@@ -73,6 +86,8 @@ public:
     hwc2_connection_t get_connection() const { return connection; }
     int retrieve_display_configs();
     hwc2_error_t set_connection(hwc2_connection_t connection);
+    hwc2_error_t create_layer(hwc2_layer_t *out_layer);
+    hwc2_error_t destroy_layer(hwc2_layer_t lyr_id);
     static hwc2_display_t get_next_id();
     static void reset_ids() { display_cnt = 0; }
 private:
@@ -81,6 +96,7 @@ private:
     hwc2_connection_t connection;
     hwc2_display_t id;
     struct nvfb_device fb_dev;
+    std::unordered_map<hwc2_layer_t, hwc2_layer> layers;
     hwc2_display_type_t type;
     static uint64_t display_cnt;
 };
@@ -94,6 +110,8 @@ public:
 
     hwc2_error_t get_display_type(hwc2_display_t dpy_id,
                     hwc2_display_type_t *out_type) const;
+    hwc2_error_t create_layer(hwc2_display_t dpy_id, hwc2_layer_t *out_layer);
+    hwc2_error_t destroy_layer(hwc2_display_t dpy_id, hwc2_layer_t lyr_id);
     void hotplug(hwc2_display_t dpy_id, hwc2_connection_t connection);
     hwc2_error_t register_callback(hwc2_callback_descriptor_t descriptor,
                     hwc2_callback_data_t callback_data,
