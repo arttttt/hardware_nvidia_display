@@ -65,9 +65,11 @@ class hwc2_display {
 public:
     hwc2_display(hwc2_display_t id, 
                     const struct nvfb_device &fb_dev,
-                    hwc2_connection_t connection);
+                    hwc2_connection_t connection,
+                    hwc2_display_type_t type);
     ~hwc2_display();
     hwc2_display_t get_id() const { return id; }
+    hwc2_display_type_t get_type() const { return type; }
     hwc2_connection_t get_connection() const { return connection; }
     int retrieve_display_configs();
     hwc2_error_t set_connection(hwc2_connection_t connection);
@@ -79,6 +81,7 @@ private:
     hwc2_connection_t connection;
     hwc2_display_t id;
     struct nvfb_device fb_dev;
+    hwc2_display_type_t type;
     static uint64_t display_cnt;
 };
 
@@ -89,6 +92,8 @@ public:
 
     int open_fb_device();
 
+    hwc2_error_t get_display_type(hwc2_display_t dpy_id,
+                    hwc2_display_type_t *out_type) const;
     void hotplug(hwc2_display_t dpy_id, hwc2_connection_t connection);
     hwc2_error_t register_callback(hwc2_callback_descriptor_t descriptor,
                     hwc2_callback_data_t callback_data,

@@ -27,6 +27,19 @@ static void hwc2_vsync(void* /*data*/, int /*dpy_id*/, uint64_t /*timestamp*/)
     return;
 }
 
+hwc2_error_t hwc2_dev::get_display_type(hwc2_display_t dpy_id,
+        hwc2_display_type_t *out_type) const
+{
+    auto it = displays.find(dpy_id);
+    if (it == displays.end()) {
+        ALOGE("dpy %" PRIu64 ": invalid display handle", dpy_id);
+        return HWC2_ERROR_BAD_DISPLAY;
+    }
+
+    *out_type = it->second.get_type();
+    return HWC2_ERROR_NONE;
+}
+
 static void hwc2_hotplug(void *data, int dpy_id, bool connected)
 {
 	ALOGE("hwc2_hotplug event\n");
@@ -121,7 +134,10 @@ int hwc2_dev::open_fb_display(int fb_id)
 
     hwc2_display_t dpy_id = hwc2_display::get_next_id();
     displays.emplace(std::piecewise_construct, std::forward_as_tuple(dpy_id),
-            std::forward_as_tuple(dpy_id, nvfb_dev, HWC2_CONNECTION_CONNECTED));
+            std::forward_as_tuple(dpy_id,
+                                    nvfb_dev,
+                                    HWC2_CONNECTION_CONNECTED,
+                                    HWC2_DISPLAY_TYPE_PHYSICAL));
 
     return 0;
 }

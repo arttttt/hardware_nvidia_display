@@ -26,12 +26,14 @@ uint64_t hwc2_display::display_cnt = 0;
 
 hwc2_display::hwc2_display(hwc2_display_t id,
             const struct nvfb_device &fb_dev,
-            hwc2_connection_t connection)
+            hwc2_connection_t connection,
+            hwc2_display_type_t type)
     : active_config(0),
       configs(),
       connection(connection),
       id(id),
-      fb_dev(fb_dev) { }
+      fb_dev(fb_dev),
+      type(type) { }
 
 hwc2_display::~hwc2_display()
 {
