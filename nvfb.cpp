@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
+#include <cutils/log.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 #include "nvfb.h"
 
@@ -33,6 +36,29 @@ int nvfb_device_open(int id, int flags, struct nvfb_device *dev)
     dev->fd = open(filename, flags);
     if (dev->fd < 0)
         return -errno;
+
+    if (ioctl(dev->fd, FBIOGET_VSCREENINFO, &dev->vi) < 0) {
+        ALOGE("failed to get fb0 info (FBIOGET_VSCREENINFO)");
+        close(dev->fd);
+        return NULL;
+    }
+
+    if (ioctl(dev->fd, FBIOGET_FSCREENINFO, &dev->fi) < 0) {
+        ALOGE("failed to get fb0 info (FBIOGET_FSCREENINFO)");
+        close(dev->fd);
+        return NULL;
+	}
+
+    ALOGD("fb%d reports (possibly inaccurate):\n"
+            "  vi.bits_per_pixel = %d\n"
+            "  vi.red.offset   = %3d   .length = %3d\n"
+            "  vi.green.offset = %3d   .length = %3d\n"
+            "  vi.blue.offset  = %3d   .length = %3d\n",
+            id,
+            dev->vi.bits_per_pixel,
+            dev->vi.red.offset, dev->vi.red.length,
+            dev->vi.green.offset, dev->vi.green.length,
+            dev->vi.blue.offset, dev->vi.blue.length);
 
     return 0;
 }

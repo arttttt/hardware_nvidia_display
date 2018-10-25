@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-#include <fcntl.h>
+
 #include <cutils/log.h>
 #include <cstdlib>
+#include <fcntl.h>
 #include <vector>
 
 #include "hwc2.h"
@@ -28,6 +28,8 @@ static void hwc2_vsync(void* /*data*/, int /*dpy_id*/, uint64_t /*timestamp*/)
 
 static void hwc2_hotplug(void* /*data*/, int /*dpy_id*/, bool /*connected*/)
 {
+	ALOGE("hwc2_hotplug event\n");
+
     return;
 }
 
@@ -46,9 +48,11 @@ hwc2_dev::~hwc2_dev()
 
 int hwc2_dev::open_fb_device()
 {
-    int intf_fd = open_fb_display(0);
+    int ret = open_fb_display(0);
 
-    return 0;
+	ALOGE("fb%u device: %s successfully opened", 0, strerror(ret));
+
+    return ret;
 }
 
 int hwc2_dev::open_fb_display(int fb_id)
@@ -61,7 +65,15 @@ int hwc2_dev::open_fb_display(int fb_id)
         return ret;
     }
 
-    ALOGE("fb%u device: %s successfully opened", fb_id, strerror(ret));
+    ALOGE("panel height: %d\npanel width: %d", 
+                nvfb_dev.vi.yres, nvfb_dev.vi.xres);
+
+    ALOGE("panel virtual height: %d\npanel virtual width: %d", 
+                nvfb_dev.vi.yres_virtual, nvfb_dev.vi.xres_virtual);
+
+    hwc2_display_t dpy_id = hwc2_display::get_next_id();
+    displays.emplace(std::piecewise_construct, std::forward_as_tuple(dpy_id),
+            std::forward_as_tuple(dpy_id, nvfb_dev));
 
     return 0;
 }

@@ -25,15 +25,13 @@
 
 class hwc2_display {
 public:
-    hwc2_display(hwc2_display_t id, int fb_intf_fd,
-                const struct nvfb_device &fb_dev);
+    hwc2_display(hwc2_display_t id, const struct nvfb_device &fb_dev);
     ~hwc2_display();
     hwc2_display_t get_id() const { return id; }
     static hwc2_display_t get_next_id();
     static void reset_ids() { display_cnt = 0; }
 private:
     hwc2_display_t id;
-    int fb_intf_fd;
     struct nvfb_device fb_dev;
     static uint64_t display_cnt;
 };

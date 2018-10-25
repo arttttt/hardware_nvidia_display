@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <linux/fb.h>
+
 struct nvfb_callbacks {
     void (*vsync)(void *data, int disp, uint64_t timestamp);
     void (*hotplug)(void *data, int disp, bool connected);
@@ -22,6 +24,8 @@ struct nvfb_callbacks {
 struct nvfb_device {
     int id;
     int fd;
+    fb_fix_screeninfo fi;
+	fb_var_screeninfo vi;
 };
 
 int nvfb_device_open(int id, int flags, struct nvfb_device *dev);
