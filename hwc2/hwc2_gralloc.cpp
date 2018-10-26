@@ -21,7 +21,7 @@
 
 hwc2_gralloc::hwc2_gralloc()
 {
-    nvgr = dlopen("gralloc.tegra132.so", RTLD_LOCAL | RTLD_LAZY);
+    nvgr = dlopen("gralloc.tegra.so", RTLD_LOCAL | RTLD_LAZY);
     LOG_ALWAYS_FATAL_IF(!nvgr, "failed to find module");
 
     *(void **)(&nvgr_is_valid) = dlsym(nvgr, "nvgr_is_valid");

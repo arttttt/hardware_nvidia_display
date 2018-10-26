@@ -18,25 +18,19 @@
 # "TARGET_USES_HWC2 := true" to flounder's BoardConfig.mk.
 # It is a 2D HAL (no GL acceleration). Enabling it will degrade performance.
 # To disable, remove "TARGET_USES_HWC2 := true" and run "make installclean"
-ifeq ($(TARGET_USES_HWC2),true)
-
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
 # HAL module implemenation, not prelinked and stored in
 # hw/<OVERLAY_HARDWARE_MODULE_ID>.<ro.product.board>.so
-LOCAL_MODULE_RELATIVE_PATH := hw
+LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)/hw
 
-LOCAL_MODULE := hwcomposer.$(TARGET_BOOTLOADER_BOARD_NAME)
+LOCAL_MODULE := hwcomposer2.$(TARGET_BOARD_PLATFORM)
 
 LOCAL_SHARED_LIBRARIES := \
 	liblog \
 	libutils
-
-LOCAL_STATIC_LIBRARIES := \
-	libadfhwc \
-	libadf
 
 LOCAL_SRC_FILES := \
 	hwc2.cpp \
@@ -46,7 +40,8 @@ LOCAL_SRC_FILES := \
 	hwc2_callback.cpp \
 	hwc2_layer.cpp \
 	hwc2_buffer.cpp \
-	hwc2_gralloc.cpp
+	hwc2_gralloc.cpp \
+	nvfb.cpp
 
 LOCAL_MODLE_TAGS := optional
 
@@ -60,5 +55,3 @@ LOCAL_LDFLAGS := -Wl,-Bsymbolic
 include $(BUILD_SHARED_LIBRARY)
 
 include $(call all-makefiles-under,$(LOCAL_PATH))
-
-endif # TARGET_USES_HWC2

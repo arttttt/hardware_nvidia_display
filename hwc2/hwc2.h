@@ -24,8 +24,7 @@
 #include <mutex>
 #include <string>
 
-#include <adf/adf.h>
-#include <adfhwc/adfhwc.h>
+#include "nvfb.h"
 
 class hwc2_gralloc {
 public:
@@ -196,9 +195,11 @@ private:
 
 class hwc2_display {
 public:
-    hwc2_display(hwc2_display_t id, int adf_intf_fd,
-                const struct adf_device &adf_dev, hwc2_connection_t connection,
-                hwc2_display_type_t type, hwc2_power_mode_t power_mode);
+    hwc2_display(hwc2_display_t id,
+                const struct nvfb_device &fb_dev,
+                hwc2_connection_t connection,
+                hwc2_display_type_t type,
+                hwc2_power_mode_t power_mode);
     ~hwc2_display();
 
     /* Display functions */
@@ -217,14 +218,13 @@ public:
     hwc2_error_t get_doze_support(int32_t *out_support) const;
 
     /* Config functions */
-    int          retrieve_display_configs(struct adf_hwc_helper *adf_helper);
+    int          retrieve_display_configs();
     hwc2_error_t get_display_attribute(hwc2_config_t config,
                     hwc2_attribute_t attribute, int32_t *out_value) const;
     hwc2_error_t get_display_configs(uint32_t *out_num_configs,
                     hwc2_config_t *out_configs) const;
     hwc2_error_t get_active_config(hwc2_config_t *out_config) const;
-    hwc2_error_t set_active_config(struct adf_hwc_helper *adf_helper,
-                    hwc2_config_t config);
+    hwc2_error_t set_active_config(hwc2_config_t config);
 
     /* Set layer functions */
     hwc2_error_t create_layer(hwc2_layer_t *out_layer);
@@ -285,11 +285,8 @@ private:
     /* The current power mode of the display */
     hwc2_power_mode_t power_mode;
 
-    /* The adf interface file descriptor for the display */
-    int adf_intf_fd;
-
-    /* The adf device associated with the display */
-    struct adf_device adf_dev;
+    /* The fb device associated with the display */
+    struct nvfb_device fb_dev;
 
     /* Keep track to total number of displays so new display ids can be
      * generated */
@@ -363,7 +360,7 @@ public:
                     hwc2_callback_data_t callback_data,
                     hwc2_function_pointer_t pointer);
 
-    int open_adf_device();
+    int open_fb_device();
 
 private:
     /* General callback functions for all displays */
@@ -372,10 +369,7 @@ private:
     /* The physical and virtual displays associated with this device */
     std::unordered_map<hwc2_display_t, hwc2_display> displays;
 
-    /* The associated adf hardware composer helper */
-    struct adf_hwc_helper *adf_helper;
-
-    int open_adf_display(adf_id_t adf_id);
+    int open_fb_display(int fb_id);
 };
 
 struct hwc2_context {

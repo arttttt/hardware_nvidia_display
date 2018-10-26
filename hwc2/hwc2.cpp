@@ -437,9 +437,9 @@ static int hwc2_device_open(const struct hw_module_t *module, const char *name,
         return -ENOMEM;
     }
 
-    int ret = ctx->hwc2_dev->open_adf_device();
+    int ret = ctx->hwc2_dev->open_fb_device();
     if (ret < 0) {
-        ALOGE("failed to open adf device: %s", strerror(ret));
+        ALOGE("failed to open fb device: %s", strerror(ret));
         delete ctx->hwc2_dev;
         delete ctx;
         return ret;
