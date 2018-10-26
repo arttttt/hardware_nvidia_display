@@ -69,11 +69,12 @@ public:
     hwc2_layer(hwc2_layer_t id);
 
     hwc2_layer_t get_id() const { return id; }
-
+    hwc2_composition_t  get_comp_type() const { return comp_type; }
+    hwc2_error_t set_comp_type(hwc2_composition_t comp_type);
     static hwc2_layer_t get_next_id();
 private:
     hwc2_layer_t id;
-
+    hwc2_composition_t comp_type;
     static uint64_t layer_cnt;
 };
 
@@ -104,6 +105,8 @@ public:
     hwc2_error_t get_doze_support(int32_t *out_support) const;
     hwc2_error_t create_layer(hwc2_layer_t *out_layer);
     hwc2_error_t destroy_layer(hwc2_layer_t lyr_id);
+    hwc2_error_t set_layer_composition_type(hwc2_layer_t lyr_id,
+                    hwc2_composition_t comp_type);
     static hwc2_display_t get_next_id();
     static void reset_ids() { display_cnt = 0; }
 private:
@@ -143,6 +146,8 @@ public:
     hwc2_error_t get_doze_support(hwc2_display_t dpy_id, int32_t *out_support) const;
     hwc2_error_t create_layer(hwc2_display_t dpy_id, hwc2_layer_t *out_layer);
     hwc2_error_t destroy_layer(hwc2_display_t dpy_id, hwc2_layer_t lyr_id);
+    hwc2_error_t set_layer_composition_type(hwc2_display_t dpy_id,
+                    hwc2_layer_t lyr_id, hwc2_composition_t comp_type);
     void hotplug(hwc2_display_t dpy_id, hwc2_connection_t connection);
     void vsync(hwc2_display_t dpy_id, uint64_t timestamp);
     hwc2_error_t set_vsync_enabled(hwc2_display_t dpy_id, hwc2_vsync_t enabled);
