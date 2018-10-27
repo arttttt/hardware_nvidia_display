@@ -33,7 +33,8 @@ LOCAL_SHARED_LIBRARIES := \
 	libutils
 
 LOCAL_SRC_FILES := \
-	nvfb.cpp
+	nvfb.cpp \
+	hwc2.cpp
 
 LOCAL_MODLE_TAGS := optional
 
