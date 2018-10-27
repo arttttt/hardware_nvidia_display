@@ -33,6 +33,7 @@ hwc2_display::hwc2_display(hwc2_display_t id,
       name(),
       connection(connection),
       type(type),
+      windows(),
       layers(),
       vsync_enabled(HWC2_VSYNC_DISABLE),
       configs(),
@@ -41,6 +42,7 @@ hwc2_display::hwc2_display(hwc2_display_t id,
       fb_dev(fb_dev)
 {
     init_name();
+    init_windows();
 }
 
 hwc2_display::~hwc2_display()
@@ -113,6 +115,38 @@ hwc2_error_t hwc2_display::get_doze_support(int32_t *out_support) const
 {
     *out_support = 0;
     return HWC2_ERROR_NONE;
+}
+
+void hwc2_display::init_windows()
+{
+    for (auto it = windows.begin(); it != windows.end(); it++)
+        it->set_capabilities(window_capabilities[it - windows.begin()]);
+}
+
+void hwc2_display::clear_windows()
+{
+    for (auto &window: windows)
+        window.clear();
+}
+
+hwc2_error_t hwc2_display::assign_client_target_window(uint32_t z_order)
+{
+    for (auto &window: windows)
+        if (window.assign_client_target(z_order) == HWC2_ERROR_NONE)
+            return HWC2_ERROR_NONE;
+    return HWC2_ERROR_NO_RESOURCES;
+}
+
+hwc2_error_t hwc2_display::assign_layer_window(uint32_t z_order,
+        hwc2_layer_t lyr_id)
+{
+    auto& lyr = layers.find(lyr_id)->second;
+    if (!hwc2_window::is_supported(lyr))
+        return HWC2_ERROR_UNSUPPORTED;
+    for (auto &window: windows)
+        if (window.assign_layer(z_order, lyr) == HWC2_ERROR_NONE)
+            return HWC2_ERROR_NONE;
+    return HWC2_ERROR_NO_RESOURCES;
 }
 
 hwc2_error_t hwc2_display::set_vsync_enabled(hwc2_vsync_t enabled)

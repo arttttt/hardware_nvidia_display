@@ -18,6 +18,29 @@
 #include <dlfcn.h>
 
 #include "hwc2.h"
+#include "include/tegrafb.h"
+
+#define NVGR_PIXEL_FORMAT_YUV420  0x100
+#define NVGR_PIXEL_FORMAT_YUV422  0x101
+#define NVGR_PIXEL_FORMAT_YUV422R 0x102
+#define NVGR_PIXEL_FORMAT_UYVY    0x104
+#define NVGR_PIXEL_FORMAT_NV12    0x106
+
+#define NVGR_SURFACE_LAYOUT_PITCH        1
+#define NVGR_SURFACE_LAYOUT_TILED        2
+#define NVGR_SURFACE_LAYOUT_BLOCK_LINEAR 3
+
+#define NVGR_SURFACE_SIZE 56
+
+#define NVGR_GET_SURFACE(surfaces, idx) \
+        ((void*)((char *) surfaces + (idx * NVGR_SURFACE_SIZE)))
+
+/* The surface struct is defined in an NVIDIA binary. Accesses to the struct
+ * will be done using member offsets */
+#define NVGR_GET_STRUCT_MEMBER(ptr, member_type, member_offset) \
+        (*((member_type *)((char *) ptr + member_offset)))
+
+#define NVGR_SURFACE_OFFSET_LAYOUT 12
 
 hwc2_gralloc::hwc2_gralloc()
 {
@@ -27,6 +50,20 @@ hwc2_gralloc::hwc2_gralloc()
     *(void **)(&nvgr_is_valid) = dlsym(nvgr, "nvgr_is_valid");
     LOG_ALWAYS_FATAL_IF(!nvgr_is_valid, "failed to find nvgr_is_valid symbol");
 
+    *(void **)(&nvgr_is_stereo) = dlsym(nvgr, "nvgr_is_stereo");
+    LOG_ALWAYS_FATAL_IF(!nvgr_is_stereo, "failed to find nvgr_is_stereo"
+            " symbol");
+
+    *(void **)(&nvgr_is_yuv) = dlsym(nvgr, "nvgr_is_yuv");
+    LOG_ALWAYS_FATAL_IF(!nvgr_is_stereo, "failed to find nvgr_is_yuv symbol");
+
+    *(void **)(&nvgr_get_format) = dlsym(nvgr, "nvgr_get_format");
+    LOG_ALWAYS_FATAL_IF(!nvgr_get_format, "failed to find nvgr_get_format"
+            " symbol");
+
+    *(void **)(&nvgr_get_surfaces) = dlsym(nvgr, "nvgr_get_surfaces");
+    LOG_ALWAYS_FATAL_IF(!nvgr_get_surfaces, "failed to find nvgr_get_surfaces"
+            " symbol");
 }
 
 hwc2_gralloc::~hwc2_gralloc()
@@ -43,4 +80,67 @@ const hwc2_gralloc &hwc2_gralloc::get_instance()
 bool hwc2_gralloc::is_valid(buffer_handle_t handle) const
 {
     return nvgr_is_valid(handle);
+}
+
+bool hwc2_gralloc::is_stereo(buffer_handle_t handle) const
+{
+    return nvgr_is_stereo(handle);
+}
+
+bool hwc2_gralloc::is_yuv(buffer_handle_t handle) const
+{
+    return nvgr_is_yuv(handle);
+}
+
+/* Convert the HAL pixel format to the equivalent TEGRA_FB format (see
+ * format list in tegrafb.h). Returns -1 if the format is not
+ * supported by gralloc.
+ */
+int hwc2_gralloc::get_format(buffer_handle_t handle) const
+{
+    int format = nvgr_get_format(handle);
+
+    switch (format) {
+    case HAL_PIXEL_FORMAT_RGBA_8888:
+    case HAL_PIXEL_FORMAT_RGBX_8888:
+        return TEGRA_FB_WIN_FMT_R8G8B8A8;
+    case HAL_PIXEL_FORMAT_RGB_565:
+        return TEGRA_FB_WIN_FMT_B5G6R5;
+    case HAL_PIXEL_FORMAT_BGRA_8888:
+        return TEGRA_FB_WIN_FMT_B8G8R8A8;
+    case NVGR_PIXEL_FORMAT_YUV420:
+        return TEGRA_FB_WIN_FMT_YCbCr420P;
+    case NVGR_PIXEL_FORMAT_YUV422:
+        return TEGRA_FB_WIN_FMT_YCbCr422P;
+    case NVGR_PIXEL_FORMAT_YUV422R:
+        return TEGRA_FB_WIN_FMT_YCbCr422R;
+    case NVGR_PIXEL_FORMAT_UYVY:
+        return TEGRA_FB_WIN_FMT_YCbCr422;
+    default:
+        return -1;
+    }
+}
+
+void hwc2_gralloc::get_surfaces(buffer_handle_t handle,
+        const void **surf, size_t *surf_cnt) const
+{
+    nvgr_get_surfaces(handle, surf, surf_cnt);
+}
+
+int32_t hwc2_gralloc::get_layout(const void *surf, uint32_t surf_idx) const
+{
+    uint32_t layout = NVGR_GET_STRUCT_MEMBER(NVGR_GET_SURFACE(surf, surf_idx),
+            uint32_t, NVGR_SURFACE_OFFSET_LAYOUT);
+
+    switch (layout) {
+    case NVGR_SURFACE_LAYOUT_PITCH:
+        return HWC2_WINDOW_CAP_PITCH;
+    case NVGR_SURFACE_LAYOUT_TILED:
+        return HWC2_WINDOW_CAP_TILED;
+    case NVGR_SURFACE_LAYOUT_BLOCK_LINEAR:
+        return HWC2_WINDOW_CAP_BLOCK_LINEAR;
+    default:
+        ALOGE("Unrecognized layout");
+        return -1;
+    }
 }

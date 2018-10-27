@@ -41,6 +41,7 @@ LOCAL_SRC_FILES := \
 	hwc2_layer.cpp \
 	hwc2_buffer.cpp \
 	hwc2_gralloc.cpp \
+	hwc2_window.cpp \
 	nvfb.cpp
 
 LOCAL_MODLE_TAGS := optional
