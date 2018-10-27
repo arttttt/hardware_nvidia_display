@@ -34,7 +34,9 @@ LOCAL_SHARED_LIBRARIES := \
 
 LOCAL_SRC_FILES := \
 	nvfb.cpp \
-	hwc2.cpp
+	hwc2.cpp \
+	hwc2_dev.cpp \
+	hwc2_display.cpp
 
 LOCAL_MODLE_TAGS := optional
 
