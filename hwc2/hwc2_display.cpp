@@ -17,6 +17,7 @@
 #include <cutils/log.h>
 #include <inttypes.h>
 
+#include <map>
 #include <vector>
 #include <array>
 
@@ -33,9 +34,12 @@ hwc2_display::hwc2_display(hwc2_display_t id,
       name(),
       connection(connection),
       type(type),
+      display_state(modified),
+      client_target_used(false),
       windows(),
       layers(),
       vsync_enabled(HWC2_VSYNC_DISABLE),
+      changed_comp_types(),
       configs(),
       active_config(0),
       power_mode(power_mode),
@@ -57,6 +61,7 @@ hwc2_error_t hwc2_display::set_connection(hwc2_connection_t connection)
         return HWC2_ERROR_BAD_PARAMETER;
     }
 
+    display_state = modified;
     this->connection = connection;
     return HWC2_ERROR_NONE;
 }
@@ -149,6 +154,107 @@ hwc2_error_t hwc2_display::assign_layer_window(uint32_t z_order,
     return HWC2_ERROR_NO_RESOURCES;
 }
 
+hwc2_error_t hwc2_display::validate_display(uint32_t *out_num_types,
+        uint32_t *out_num_requests)
+{
+    if (display_state == valid) {
+        *out_num_types = 0;
+        *out_num_requests = 0;
+        return HWC2_ERROR_NONE;
+    }
+    
+    clear_windows();
+    changed_comp_types.clear();
+    assign_composition();
+    
+    *out_num_requests = 0;
+    *out_num_types = changed_comp_types.size();
+    for (auto &lyr: layers)
+        lyr.second.set_modified(false);
+        
+    if (*out_num_types > 0) {
+        display_state = invalid;
+        return HWC2_ERROR_HAS_CHANGES;
+    }
+    display_state = valid;
+    
+    return HWC2_ERROR_NONE;
+}
+ void hwc2_display::assign_composition()
+{
+    hwc2_error_t ret;
+    std::map<uint32_t, hwc2_layer_t> ordered_layers;
+    
+    for (auto &lyr: layers)
+        ordered_layers.emplace(lyr.second.get_z_order(), lyr.second.get_id());
+        
+    bool client_target_assigned = false;
+    
+    /* If there will definitely be a client target, assign it to the front most
+     * window */
+    if (layers.size() > windows.size()) {
+        ret = assign_client_target_window(0);
+        ALOG_ASSERT(ret == HWC2_ERROR_NONE, "No valid client target window");
+         client_target_assigned = true;
+    }
+    
+    bool retry_assignment;
+    do {
+        retry_assignment = false;
+        /* The display controller uses a different z order than SurfaceFlinger */
+        uint32_t z_order = windows.size() - 1;
+        client_target_used = false;
+        
+        /* Iterate over the layers from the back to the front.
+        * assign windows to device layers. Upon reaching a layer that must
+        * be composed by the client all subsequent layers will be assigned
+        * client composition */
+        for (auto &ordered_layer: ordered_layers) {
+            hwc2_layer_t lyr_id = ordered_layer.second;
+            hwc2_composition_t comp_type = layers.find(
+                    lyr_id)->second.get_comp_type();
+             if (comp_type == HWC2_COMPOSITION_INVALID) {
+                ALOGW("dpy %" PRIu64 " lyr %" PRIu64 ": invalid composition"
+                        " type %u", id, lyr_id, comp_type);
+                continue;
+            }
+            
+            /* If the layer is not overlapped and can be assigned a window,
+             * assign it and continue to the next layer */
+            if (comp_type == HWC2_COMPOSITION_DEVICE && !client_target_used
+                    && assign_layer_window(z_order, lyr_id) == HWC2_ERROR_NONE) {
+                z_order--;
+                continue;
+            }
+            
+            /* The layer will be composited into a client target buffer so
+             * find a window for the client target */
+            if (!client_target_assigned) {
+                ret = assign_client_target_window(0);
+                if (ret != HWC2_ERROR_NONE) {
+                    /* If no client target can be assigned, clear all the
+                     * windows, assign a client target and retry assigning
+                     * windows */
+                    retry_assignment = true;
+                    changed_comp_types.clear();
+                    clear_windows();
+                    ret = assign_client_target_window(0);
+                    ALOG_ASSERT(ret == HWC2_ERROR_NONE, "No valid client target"
+                            " window");
+                    client_target_assigned = true;
+                    break;
+                }
+                client_target_assigned = true;
+            }
+            
+            /* Assign the layer to client composition */
+            if (comp_type != HWC2_COMPOSITION_CLIENT)
+                changed_comp_types.emplace(lyr_id, HWC2_COMPOSITION_CLIENT);
+            client_target_used = true;
+        }
+    } while (retry_assignment);
+}
+
 hwc2_error_t hwc2_display::set_vsync_enabled(hwc2_vsync_t enabled)
 {
     if (enabled == HWC2_VSYNC_INVALID) {
@@ -233,6 +339,8 @@ hwc2_error_t hwc2_display::set_active_config(hwc2_config_t config)
 
 hwc2_error_t hwc2_display::create_layer(hwc2_layer_t *out_layer)
 {
+    display_state = modified;
+
     hwc2_layer_t lyr_id = hwc2_layer::get_next_id();
     layers.emplace(std::piecewise_construct, std::forward_as_tuple(lyr_id),
             std::forward_as_tuple(lyr_id));
@@ -249,6 +357,7 @@ hwc2_error_t hwc2_display::destroy_layer(hwc2_layer_t lyr_id)
         return HWC2_ERROR_BAD_LAYER;
     }
 
+    display_state = modified;
     layers.erase(lyr_id);
     return HWC2_ERROR_NONE;
 }
@@ -262,7 +371,12 @@ hwc2_error_t hwc2_display::set_layer_composition_type(hwc2_layer_t lyr_id,
         return HWC2_ERROR_BAD_LAYER;
     }
 
-    return it->second.set_comp_type(comp_type);
+    hwc2_error_t ret = it->second.set_comp_type(comp_type);
+
+    if (it->second.get_modified())
+        display_state = modified;
+
+    return ret;
 }
 
 hwc2_error_t hwc2_display::set_layer_buffer(hwc2_layer_t lyr_id,
@@ -274,7 +388,12 @@ hwc2_error_t hwc2_display::set_layer_buffer(hwc2_layer_t lyr_id,
         return HWC2_ERROR_BAD_LAYER;
     }
 
-    return it->second.set_buffer(handle, acquire_fence);
+    hwc2_error_t ret = it->second.set_buffer(handle, acquire_fence);
+
+    if (it->second.get_modified())
+        display_state = modified;
+
+    return ret;
 }
 
 hwc2_error_t hwc2_display::set_layer_dataspace(hwc2_layer_t lyr_id,
@@ -286,7 +405,12 @@ hwc2_error_t hwc2_display::set_layer_dataspace(hwc2_layer_t lyr_id,
         return HWC2_ERROR_BAD_LAYER;
     }
 
-    return it->second.set_dataspace(dataspace);
+    hwc2_error_t ret = it->second.set_dataspace(dataspace);
+
+    if (it->second.get_modified())
+        display_state = modified;
+
+    return ret;
 }
 
 hwc2_error_t hwc2_display::set_layer_display_frame(hwc2_layer_t lyr_id,
@@ -298,7 +422,12 @@ hwc2_error_t hwc2_display::set_layer_display_frame(hwc2_layer_t lyr_id,
         return HWC2_ERROR_BAD_LAYER;
     }
 
-    return it->second.set_display_frame(display_frame);
+    hwc2_error_t ret = it->second.set_display_frame(display_frame);
+
+    if (it->second.get_modified())
+        display_state = modified;
+
+    return ret;
 }
 
 hwc2_error_t hwc2_display::set_layer_source_crop(hwc2_layer_t lyr_id,
@@ -310,7 +439,12 @@ hwc2_error_t hwc2_display::set_layer_source_crop(hwc2_layer_t lyr_id,
         return HWC2_ERROR_BAD_LAYER;
     }
 
-    return it->second.set_source_crop(source_crop);
+    hwc2_error_t ret = it->second.set_source_crop(source_crop);
+
+    if (it->second.get_modified())
+        display_state = modified;
+
+    return ret;
 }
 
 hwc2_error_t hwc2_display::set_layer_z_order(hwc2_layer_t lyr_id, uint32_t z_order)
@@ -321,7 +455,12 @@ hwc2_error_t hwc2_display::set_layer_z_order(hwc2_layer_t lyr_id, uint32_t z_ord
         return HWC2_ERROR_BAD_LAYER;
     }
 
-    return it->second.set_z_order(z_order);
+    hwc2_error_t ret = it->second.set_z_order(z_order);
+
+    if (it->second.get_modified())
+        display_state = modified;
+
+    return ret;
 }
 
 hwc2_error_t hwc2_display::set_layer_surface_damage(hwc2_layer_t lyr_id,
@@ -345,7 +484,12 @@ hwc2_error_t hwc2_display::set_layer_blend_mode(hwc2_layer_t lyr_id,
         return HWC2_ERROR_BAD_LAYER;
     }
 
-    return it->second.set_blend_mode(blend_mode);
+    hwc2_error_t ret = it->second.set_blend_mode(blend_mode);
+
+    if (it->second.get_modified())
+        display_state = modified;
+
+    return ret;
 }
 
 hwc2_error_t hwc2_display::set_layer_plane_alpha(hwc2_layer_t lyr_id, float plane_alpha)
@@ -356,7 +500,12 @@ hwc2_error_t hwc2_display::set_layer_plane_alpha(hwc2_layer_t lyr_id, float plan
         return HWC2_ERROR_BAD_LAYER;
     }
 
-    return it->second.set_plane_alpha(plane_alpha);
+    hwc2_error_t ret = it->second.set_plane_alpha(plane_alpha);
+
+    if (it->second.get_modified())
+        display_state = modified;
+
+    return ret;
 }
 
 hwc2_error_t hwc2_display::set_layer_transform(hwc2_layer_t lyr_id,
@@ -368,7 +517,12 @@ hwc2_error_t hwc2_display::set_layer_transform(hwc2_layer_t lyr_id,
         return HWC2_ERROR_BAD_LAYER;
     }
 
-    return it->second.set_transform(transform);
+    hwc2_error_t ret = it->second.set_transform(transform);
+
+    if (it->second.get_modified())
+        display_state = modified;
+
+    return ret;
 }
 
 hwc2_error_t hwc2_display::set_layer_visible_region(hwc2_layer_t lyr_id,
@@ -380,7 +534,12 @@ hwc2_error_t hwc2_display::set_layer_visible_region(hwc2_layer_t lyr_id,
         return HWC2_ERROR_BAD_LAYER;
     }
 
-    return it->second.set_visible_region(visible_region);
+    hwc2_error_t ret = it->second.set_visible_region(visible_region);
+
+    if (it->second.get_modified())
+        display_state = modified;
+
+    return ret;
 }
 
 hwc2_error_t hwc2_display::set_layer_color(hwc2_layer_t lyr_id,
