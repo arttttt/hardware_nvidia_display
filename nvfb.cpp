@@ -37,7 +37,7 @@ void nvfb_blank(struct nvfb_device *dev, bool blank)
 {
     int ret;
 
-    ret = ioctl(dev->fd, FBIOBLANK, blank ? FB_BLANK_POWERDOWN : FB_BLANK_UNBLANK);
+    ret = ioctl(dev->fb_fd, FBIOBLANK, blank ? FB_BLANK_POWERDOWN : FB_BLANK_UNBLANK);
     if (ret < 0)
         ALOGE("ioctl(): blank");
 }

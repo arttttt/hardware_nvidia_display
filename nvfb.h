@@ -42,7 +42,8 @@ struct nvfb_callbacks {
 struct nvfb_device {
 	void* data;
     int id;
-    int fd;
+    int fb_fd;
+	int dc_fd;
     int ctrl_fd;
     fb_fix_screeninfo fi;
 	fb_var_screeninfo vi;
