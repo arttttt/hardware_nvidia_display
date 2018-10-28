@@ -28,52 +28,8 @@
 
 #define FB_BASE_PATH "/dev/graphics/"
 
-int nvfb_device_open(int id, int flags, struct nvfb_device *dev)
+int nvfb_device_open(struct nvfb_device **dev, struct nvfb_callbacks *callbacks)
 {
-    char filename[64];
-
-    dev->id = id;
-
-    snprintf(filename, sizeof(filename), FB_BASE_PATH "fb%u", id);
-    dev->fd = open(filename, flags);
-    if (dev->fd < 0)
-        return -1;
-
-    if (ioctl(dev->fd, FBIOGET_VSCREENINFO, &dev->vi) < 0) {
-        ALOGE("failed to get fb0 info (FBIOGET_VSCREENINFO)");
-        close(dev->fd);
-        return -1;
-    }
-
-    if (ioctl(dev->fd, FBIOGET_FSCREENINFO, &dev->fi) < 0) {
-        ALOGE("failed to get fb0 info (FBIOGET_FSCREENINFO)");
-        close(dev->fd);
-        return -1;
-	}
-
-    ALOGD("fb%d reports (possibly inaccurate):\n"
-            "  vi.bits_per_pixel = %d\n"
-            "  vi.red.offset   = %3d   .length = %3d\n"
-            "  vi.green.offset = %3d   .length = %3d\n"
-            "  vi.blue.offset  = %3d   .length = %3d\n",
-            id,
-            dev->vi.bits_per_pixel,
-            dev->vi.red.offset, dev->vi.red.length,
-            dev->vi.green.offset, dev->vi.green.length,
-            dev->vi.blue.offset, dev->vi.blue.length);
-
-    dev->data = mmap(0, dev->fi.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fd, 0);
-    if (dev->data == MAP_FAILED) {
-        ALOGE("failed to mmap framebuffer");
-        close(dev->fd);
-        return NULL;
-    }
-
-    memset(dev->data, 0, dev->fi.smem_len);
-
-    nvfb_blank(dev, true);
-    nvfb_blank(dev, false);
-
     return 0;
 }
 

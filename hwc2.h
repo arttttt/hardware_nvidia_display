@@ -22,28 +22,7 @@
 #include <unordered_map>
 
 #include "nvfb.h"
-
-class hwc2_display {
-public:
-    hwc2_display(hwc2_display_t id, const struct nvfb_device &fb_dev);
-    ~hwc2_display();
-
-    hwc2_display_t get_id() const { return id; }
-
-    static hwc2_display_t get_next_id();
-
-    static void reset_ids() { display_cnt = 0; }
-private:
-    /* Identifies the display to the client */
-    hwc2_display_t id;
-
-     /* The fb device associated with the display */
-    struct nvfb_device fb_dev;
-
-     /* Keep track to total number of displays so new display ids can be
-     * generated */
-    static uint64_t display_cnt;
-};
+#include "hwc2_display.h"
 
 class hwc2_dev {
 public:
@@ -56,6 +35,9 @@ private:
     std::unordered_map<hwc2_display_t, hwc2_display> displays;
 
     int open_fb_display(int dpy);
+
+    int get_displays(struct nvfb_device *dev);
+	int open_display(struct nvfb_device *dev, hwc2_display *dpy);
 };
 
 struct hwc2_context {

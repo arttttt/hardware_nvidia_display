@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <errno.h>
 #include <fcntl.h>
 #include <cutils/log.h>
 #include <cstdlib>
@@ -21,51 +22,97 @@
 
 #include "hwc2.h"
 
+#define TEGRA_CTRL_PATH "/dev/tegra_dc_ctrl"
+
+static int hotplug(void *data, int disp, struct nvfb_hotplug_status hotplug)
+{
+    return 0;
+}
+
+static int acquire(void *data, int disp)
+{
+    return 0;
+}
+
+static int release(void *data, int disp)
+{
+    return 0;
+}
+
+static int bandwidth_change(void *data)
+{
+    return 0;
+}
+
 hwc2_dev::hwc2_dev()
     : displays() { }
 
-hwc2_dev::~hwc2_dev()
-{
-    hwc2_display::reset_ids();
-}
+hwc2_dev::~hwc2_dev() { }
 
 int hwc2_dev::open_fb_device()
 {
     int ret;
+    struct nvfb_device *dev;
 
-    ret = open_fb_display(0);
-    if (ret < 0)
-        goto err;
+    struct nvfb_callbacks callbacks = {
+        .hotplug = hotplug,
+        .acquire = acquire,
+        .release = release,
+        .bandwidth_change = bandwidth_change,
+    };
 
-    if (displays.empty()) {
-        ALOGE("failed to open any physical displays");
-        ret = -1;
-        goto err;
+    dev = (struct nvfb_device*) malloc(sizeof(struct nvfb_device));
+    if (!dev) {
+        return -1;
     }
 
-err:
-    return ret;
+    memset(dev, 0, sizeof(struct nvfb_device));
+    dev->ctrl_fd = -1;
+
+    dev->callbacks = callbacks;
+
+    ret = get_displays(dev);
+    if (ret < 0)
+        return ret;
+
+    return 0;
 }
 
-int hwc2_dev::open_fb_display(int fb_id) {
-    struct nvfb_device nvfb_dev;
+int hwc2_dev::get_displays(struct nvfb_device *dev)
+{
+    int num, ii, ret;
 
-    int ret = nvfb_device_open(fb_id, O_RDWR, &nvfb_dev);
-    if (ret < 0) {
-        ALOGE("failed to open fb%u device: %s", fb_id, strerror(ret));
-        return ret;
+    dev->ctrl_fd = open(TEGRA_CTRL_PATH, O_RDWR);
+    if (dev->ctrl_fd < 0) {
+        return errno;
     }
 
-    ALOGE("panel height: %d\npanel width: %d", 
-                nvfb_dev.vi.yres, nvfb_dev.vi.xres);
+    if (ioctl(dev->ctrl_fd, TEGRA_DC_EXT_CONTROL_GET_NUM_OUTPUTS, &num)) {
+        return errno;
+    }
 
-    ALOGE("panel virtual height: %d\npanel virtual width: %d", 
-                nvfb_dev.vi.yres_virtual, nvfb_dev.vi.xres_virtual);
+    ALOGE("TEGRA_DC_EXT_CONTROL_GET_NUM_OUTPUTS = %d", num);
 
-    hwc2_display_t dpy_id = hwc2_display::get_next_id();
-    displays.emplace(std::piecewise_construct, std::forward_as_tuple(dpy_id),
-            std::forward_as_tuple(dpy_id,
-                                    nvfb_dev));
+    for (ii = 0; ii < num; ii++) {
+        struct tegra_dc_ext_control_output_properties props;
+        hwc2_display_t dpy_id = ii;
+        hwc2_display dpy(dpy_id);
 
+        props.handle = ii;
+        if (ioctl(dev->ctrl_fd, TEGRA_DC_EXT_CONTROL_GET_OUTPUT_PROPERTIES,
+                  &props)) {
+            return errno;
+        }
+
+        ret = open_display(dev, &dpy);
+        if (ret < 0)
+            return ret;
+    }
+
+	return 0;
+}
+
+int hwc2_dev::open_display(struct nvfb_device *dev, hwc2_display *dpy)
+{
     return 0;
 }

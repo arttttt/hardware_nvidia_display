@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-#include <array>
-#include <cutils/log.h>
-#include <inttypes.h>
-#include <unistd.h>
-#include <vector>
+class hwc2_display {
+public:
+    hwc2_display(hwc2_display_t id);
+    ~hwc2_display();
 
-#include "hwc2.h"
-
-hwc2_display::hwc2_display(hwc2_display_t id)
-    : id(id) { }
-
-hwc2_display::~hwc2_display() { }
+    hwc2_display_t get_id() const { return id; }
+private:
+    /* Identifies the display to the client */
+    hwc2_display_t id;
+};
